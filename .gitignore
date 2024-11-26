@@ -2,3 +2,7 @@ $ OS .gitignore
 
 .vscode/**
 *.exe
+*.workspace
+*.pdsbak
+
+###
