@@ -23,7 +23,7 @@
 #define ENTRY_SET 0x06 // 0000 01(I/D)S I/D = 1 (increment cursor) & S = 0 (no shift)
 #define CLR_DISPLAY 0x01
 
-static esp_err_t i2c_master_init();
+esp_err_t master_init();
 
 void lcd_init(void); // initialize lcd
 

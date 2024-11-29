@@ -23,7 +23,7 @@ static const char *TAG = "lcd-i2c";
 /**
  * @brief i2c master initialization
  */
-static esp_err_t i2c_master_init()
+esp_err_t master_init()
 {
     int i2c_master_port = I2C_MASTER_NUM;
 
