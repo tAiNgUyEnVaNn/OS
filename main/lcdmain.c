@@ -67,10 +67,10 @@ void app_main(void)
     //    lcd_put_cur(0, 0);
     //    lcd_send_string("Hello world!");
     //
-    //    lcd_put_cur(1, 0);
+    //    lcd_set_cursor(1, 0);
     //    lcd_send_string("from ESP32");
 
     sprintf(buffer, "val=%.2f", num);
-    lcd_put_cur(0, 0);
+    lcd_set_cursor(0, 0);
     lcd_send_string(buffer);
 }
