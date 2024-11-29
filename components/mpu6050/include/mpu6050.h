@@ -15,7 +15,7 @@
 #include "driver/i2c.h"
 
 // I2C master clock
-#define MPU6050_I2C_FREQ_HZ 400000 
+#define MPU6050_I2C_FREQ_HZ 400000
 
 // Device address
 #define MPU6050_ADDRESS 0x69

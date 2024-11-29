@@ -1,12 +1,3 @@
-/**
- * @file mpu6050.c
- * @author Ailton Fidelix (ailton1626@gmail.com)
- * @brief MPU6050 library for ESP-IDF
- * @version 1.0.0
- * @date 07-08-2022
- * @copyright Copyright (c) 2022
- */
-
 #include "mpu6050.h"
 
 // Buffer used to read the sensors registers

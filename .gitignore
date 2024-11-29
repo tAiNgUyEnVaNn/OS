@@ -1,5 +1,6 @@
 $ OS .gitignore
 
+.devcontainer/**
 .vscode/**
 *.exe
 *.workspace
