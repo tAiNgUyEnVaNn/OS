@@ -1,4 +1,13 @@
 
+
+#define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO number used for I2C master clock */
+#define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO number used for I2C master data  */
+#define I2C_MASTER_NUM 0              /*!< I2C master i2c port number, the number of i2c peripheral interfaces available will depend on the chip */
+#define I2C_MASTER_FREQ_HZ 400000     /*!< I2C master clock frequency */
+#define I2C_MASTER_TX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
+#define I2C_MASTER_RX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
+#define I2C_MASTER_TIMEOUT_MS 1000
+
 // Delay time require, reference on page 13 of LCD datasheet <for 4-bit interferce>
 #define DELAY_POWER_ON 50000  // wait time for stabilizing power supply >40ms
 #define DELAY_SET_INIT_1 5000 // >4.1ms
@@ -13,6 +22,8 @@
 #define CLR_DISPLAY 0x01
 #define ENTRY_SET 0x06 // 0000 01(I/D)S I/D = 1 (increment cursor) & S = 0 (no shift)
 #define CLR_DISPLAY 0x01
+
+static esp_err_t i2c_master_init();
 
 void lcd_init(void); // initialize lcd
 

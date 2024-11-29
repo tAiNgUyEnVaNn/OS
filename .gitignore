@@ -4,5 +4,6 @@ $ OS .gitignore
 *.exe
 *.workspace
 *.pdsbak
+*.json
 
 ###

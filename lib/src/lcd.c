@@ -10,7 +10,36 @@
 
 #define I2C_NUM I2C_NUM_0
 
-static const char *TAG = "LCD";
+static const char *TAG = "lcd-i2c";
+
+#define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO number used for I2C master clock */
+#define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO number used for I2C master data  */
+#define I2C_MASTER_NUM 0              /*!< I2C master i2c port number, the number of i2c peripheral interfaces available will depend on the chip */
+#define I2C_MASTER_FREQ_HZ 400000     /*!< I2C master clock frequency */
+#define I2C_MASTER_TX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
+#define I2C_MASTER_RX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
+#define I2C_MASTER_TIMEOUT_MS 1000
+
+/**
+ * @brief i2c master initialization
+ */
+static esp_err_t i2c_master_init()
+{
+    int i2c_master_port = I2C_MASTER_NUM;
+
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    };
+
+    i2c_param_config(i2c_master_port, &conf);
+
+    return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+}
 
 // Step by step sending command or data to slave
 // <S> (addr)<A6-A5-A4-A3-A2-A1-A0-R/W> <ACK> (data)[<P7-P6-P5-P4-P3-P2-P1-P0> <ACK>...]<P>
@@ -75,27 +104,27 @@ void lcd_set_cursor(int row, int col)
 void lcd_init(void)
 {
     // 4 bit initialisation
-    usleep(50000); // wait for >40ms
-    lcd_send_cmd(0x30);
-    usleep(5000); // wait for >4.1ms
-    lcd_send_cmd(0x30);
-    usleep(200); // wait for >100us
-    lcd_send_cmd(0x30);
+    usleep(DELAY_POWER_ON); // wait for >40ms
+    lcd_send_cmd(LCD_INIT_CMD);
+    usleep(DELAY_SET_INIT_1); // wait for >4.1ms
+    lcd_send_cmd(LCD_INIT_CMD);
+    usleep(DELAY_SET_INIT_2); // wait for >100us
+    lcd_send_cmd(LCD_INIT_CMD);
     usleep(10000);
-    lcd_send_cmd(0x20); // 4bit mode
+    lcd_send_cmd(FOUR_BIT_MODE); // 4bit mode
     usleep(10000);
 
     // dislay initialisation
-    lcd_send_cmd(0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
+    lcd_send_cmd(FUNCTION_SET); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
     usleep(1000);
-    lcd_send_cmd(0x08); // Display on/off control --> D=0,C=0, B=0  ---> display off
+    lcd_send_cmd(DISPLAY_OFF); // Display on/off control --> D=0,C=0, B=0  ---> display off
     usleep(1000);
-    lcd_send_cmd(0x01); // clear display
+    lcd_send_cmd(CLR_DISPLAY); // clear display
     usleep(1000);
     usleep(1000);
-    lcd_send_cmd(0x06); // Entry mode set --> I/D = 1 (increment cursor) & S = 0 (no shift)
+    lcd_send_cmd(ENTRY_SET); // Entry mode set --> I/D = 1 (increment cursor) & S = 0 (no shift)
     usleep(1000);
-    lcd_send_cmd(0x0C); // Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
+    lcd_send_cmd(DISPLAY_ON); // Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
     usleep(1000);
 }
 
