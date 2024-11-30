@@ -24,6 +24,7 @@ Data: 0x28 (0010 1000)
 --->: u:0010; l:1000  
 --->: 0x2C 0x28 0x8C 0x88
 
+
 <style>
 table {
   border-collapse: collapse;
@@ -35,6 +36,7 @@ th, td {
   padding: 8px;
 }
 </style>
+
 
 | PCF8674A | LCD1602 |   Bit   |
 |:--------:|:-------:|:-------:|
