@@ -11,10 +11,10 @@
 3 modify pin: A0, A1, A2. Value from (000 -> 111)
 ### With PCF8674
 7-bit hexadecimal address without R/nW: 0x20h to 0x27h  
-For example with R/nW: [(0x27h << 1) | 0xF]/ [0x27h << 1] 
+For example with R/nW: ```[(0x27h << 1) | 0xF]/ [0x27h << 1]``` 
 ### With PCF8674A
 7-bit hexadecimal address without R/nW: 0x38h to 0x3Fh  
-For example with R/nW: [(0x3Fh << 1) | 0xF]/ [0x3Fh << 1] 
+For example with R/nW: ```[(0x3Fh << 1) | 0xF]/ [0x3Fh << 1]``` 
 ## Message format
 ```
 <S> (addr)<A6-A5-A4-A3-A2-A1-A0-R/W> <ACK> (data)[<P7-P6-P5-P4-P3-P2-P1-P0> <ACK>...]<P>
@@ -25,7 +25,7 @@ Data: 0x28 (0010 1000)
 --->: 0x2C 0x28 0x8C 0x88
 
 
-<style>
+<!-- <style>
 table {
   border-collapse: collapse;
   width: 100%;
@@ -35,11 +35,11 @@ th, td {
   text-align: center;
   padding: 8px;
 }
-</style>
+</style> -->
 
 
 | PCF8674A | LCD1602 |   Bit   |
-|:--------:|:-------:|:-------:|
+|----------|---------| ------- |
 |    P7    |    D7   |    0    |
 |    P6    |    D6   |    0    |
 |    P5    |    D5   |    1    |
