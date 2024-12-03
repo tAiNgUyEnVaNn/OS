@@ -1,5 +1,3 @@
-// Push to LCD branches
-
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "unistd.h"

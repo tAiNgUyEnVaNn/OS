@@ -56,20 +56,26 @@ static esp_err_t i2c_master_init(void)
     return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
+char string_buffer[2][16];
 void num2string(int gyr_x, int gyr_y, int gyr_z, float acc_x, float acc_y, float acc_z)
 {
+    sprintf(string_buffer[0], "acc %.1f %.1f %.1f", acc_x, acc_y, acc_z);
+    sprintf(string_buffer[1], "gyr %d %d %d", gyr_x, gyr_y, gyr_z);
 }
 
 void app_main(void)
 {
+    // put code to get imy data here
     int gyr_x = 1;
     int gyr_y = 2;
     int gyr_z = 3;
     float acc_x = 1.1;
     float acc_y = 1.2;
     float acc_z = 1.3;
-    char buffer
-        ESP_ERROR_CHECK(i2c_master_init());
+    //
+    num2string(gyr_x, gyr_y, gyr_z, acc_x, acc_y, acc_z);
+
+    ESP_ERROR_CHECK(i2c_master_init());
     // ESP_LOGI(TAG, "I2C initialized successfully");
 
     lcd_init();
@@ -83,9 +89,12 @@ void app_main(void)
     //    lcd_set_cursor(1, 0);
     //    lcd_send_string("from ESP32");
 
-    sprintf(buffer, "val=%.2f", num);
+    // sprintf(buffer, "val=%.2f", num);
+    // lcd_set_cursor(0, 0);
+    // lcd_send_string(buffer);
     lcd_set_cursor(0, 0);
-    lcd_send_string(buffer);
-    // usleep(100);
+    lcd_send_string(string_buffer[0]);
+    lcd_set_cursor(1, 0);
+    lcd_send_string(string_buffer[1]);
     // }
 }
