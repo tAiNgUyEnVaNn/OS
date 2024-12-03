@@ -27,7 +27,7 @@ static const char *TAG = "i2c-simple-example";
 #define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO number used for I2C master clock */
 #define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO number used for I2C master data  */
 #define I2C_MASTER_NUM 0              /*!< I2C master i2c port number, the number of i2c peripheral interfaces available will depend on the chip */
-#define I2C_MASTER_FREQ_HZ 100000     /*!< I2C master clock frequency */
+#define I2C_MASTER_FREQ_HZ 400000     /*!< I2C master clock frequency */
 #define I2C_MASTER_TX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS 1000
@@ -56,12 +56,25 @@ static esp_err_t i2c_master_init(void)
     return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
+void num2string(int gyr_x, int gyr_y, int gyr_z, float acc_x, float acc_y, float acc_z)
+{
+}
+
 void app_main(void)
 {
-    ESP_ERROR_CHECK(i2c_master_init());
+    int gyr_x = 1;
+    int gyr_y = 2;
+    int gyr_z = 3;
+    float acc_x = 1.1;
+    float acc_y = 1.2;
+    float acc_z = 1.3;
+    char buffer
+        ESP_ERROR_CHECK(i2c_master_init());
     // ESP_LOGI(TAG, "I2C initialized successfully");
 
     lcd_init();
+    // while (1)
+    // {
     lcd_clear();
 
     //    lcd_put_cur(0, 0);
@@ -73,4 +86,6 @@ void app_main(void)
     sprintf(buffer, "val=%.2f", num);
     lcd_set_cursor(0, 0);
     lcd_send_string(buffer);
+    // usleep(100);
+    // }
 }
