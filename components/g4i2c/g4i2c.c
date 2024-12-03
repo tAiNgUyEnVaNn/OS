@@ -1,8 +1,4 @@
-#include <driver/gpio.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <esp_err.h>
-#include <esp_log.h>
+#include "g4i2c.h"
 
 static bool g_i2c_started;
 static uint8_t g_i2c_sda;

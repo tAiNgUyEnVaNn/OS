@@ -9,6 +9,12 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 #include <esp_err.h>
+#include <driver/gpio.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_err.h>
+#include <esp_log.h>
+#include <rom/ets_sys.h>
 
     esp_err_t sw_i2c_init(uint8_t sda, uint8_t scl);
     esp_err_t sw_i2c_master_start();
