@@ -79,8 +79,6 @@ void app_main(void)
     // ESP_LOGI(TAG, "I2C initialized successfully");
 
     lcd_init();
-    // while (1)
-    // {
     lcd_clear();
 
     //    lcd_put_cur(0, 0);
