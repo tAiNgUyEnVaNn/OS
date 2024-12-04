@@ -1,47 +1,25 @@
-/* i2c - Simple example
-
-   Simple I2C example that shows how to initialize I2C
-   as well as reading and writing from and to registers for a sensor connected over I2C.
-
-   The sensor used in this example is a MPU9250 inertial measurement unit.
-
-   For other examples please check:
-   https://github.com/espressif/esp-idf/tree/master/examples
-
-   See README.md file to get detailed usage of this example.
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <stdio.h>
-#include "esp_log.h"
 #include "driver/i2c.h"
 #include "lcd.h"
 #include "mpu6050.h"
 
-static const char *TAG = "i2c-simple-example";
 
-#define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO number used for I2C master clock */
-#define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO number used for I2C master data  */
-#define I2C_MASTER_NUM 0              /*!< I2C master i2c port number, the number of i2c peripheral interfaces available will depend on the chip */
-#define I2C_MASTER_FREQ_HZ 400000     /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE 0   /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_TIMEOUT_MS 1000
+#define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO cho xung clock I2C SCL */
+#define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO cho dữ liệu I2C SDA  */
+#define I2C_MASTER_NUM 0              /*!< Cổng I2C chính của I2C */
+#define I2C_MASTER_FREQ_HZ 100000     /*!< Tần số xung nhịp của I2C */
+#define I2C_MASTER_TX_BUF_DISABLE 0
+#define I2C_MASTER_RX_BUF_DISABLE 0
 
-char buffer[10];
-float num = 12.34;
+//Sau sẽ thay các giá trị đọc được từ cảm biến
+float accel_x = 1.23, accel_y = 4.56, accel_z = 7.89;
+float gyro_x = 0.12, gyro_y = 3.45, gyro_z = 6.78;
 
 /**
- * @brief i2c master initialization
+ * @brief Hàm khởi tạo I2C
  */
 static esp_err_t i2c_master_init(void)
 {
-    int i2c_master_port = I2C_MASTER_NUM;
-
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = I2C_MASTER_SDA_IO,
@@ -50,49 +28,36 @@ static esp_err_t i2c_master_init(void)
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .master.clk_speed = I2C_MASTER_FREQ_HZ,
     };
-
-    i2c_param_config(i2c_master_port, &conf);
-
-    return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
-}
-
-char string_buffer[2][16];
-void num2string(int gyr_x, int gyr_y, int gyr_z, float acc_x, float acc_y, float acc_z)
-{
-    sprintf(string_buffer[0], "acc %.1f %.1f %.1f", acc_x, acc_y, acc_z);
-    sprintf(string_buffer[1], "gyr %d %d %d", gyr_x, gyr_y, gyr_z);
+    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
+    return i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
 void app_main(void)
 {
-    // put code to get imy data here
-    int gyr_x = 1;
-    int gyr_y = 2;
-    int gyr_z = 3;
-    float acc_x = 1.1;
-    float acc_y = 1.2;
-    float acc_z = 1.3;
-    //
-    num2string(gyr_x, gyr_y, gyr_z, acc_x, acc_y, acc_z);
-
+    // Khởi tạo I2C và LCD
     ESP_ERROR_CHECK(i2c_master_init());
-    // ESP_LOGI(TAG, "I2C initialized successfully");
-
     lcd_init();
+
+    // Xóa màn hình
     lcd_clear();
 
-    //    lcd_put_cur(0, 0);
-    //    lcd_send_string("Hello world!");
-    //
-    //    lcd_set_cursor(1, 0);
-    //    lcd_send_string("from ESP32");
+    // Dòng 1: Hiển thị ACC và các giá trị X, Y, Z
+    lcd_set_cursor(0, 0); // Đặt con trỏ ở dòng 1, cột 0
+    lcd_send_string("ACC   X  Y  Z");
 
-    // sprintf(buffer, "val=%.2f", num);
-    // lcd_set_cursor(0, 0);
-    // lcd_send_string(buffer);
-    lcd_set_cursor(0, 0);
-    lcd_send_string(string_buffer[0]);
-    lcd_set_cursor(1, 0);
-    lcd_send_string(string_buffer[1]);
-    // }
+    lcd_set_cursor(1, 0); // Dòng 2: Hiển thị GYR và các giá trị X, Y, Z
+    lcd_send_string("GYR   X  Y  Z");
+
+    // Cập nhật giá trị từ cảm biến
+    char buffer[16];
+
+    // Dòng 1: Giá trị ACC
+    lcd_set_cursor(0, 5); // Vị trí bắt đầu hiển thị giá trị X, Y, Z
+    sprintf(buffer, "%.1f %.1f %.1f", accel_x, accel_y, accel_z);
+    lcd_send_string(buffer);
+
+    // Dòng 2: Giá trị GYR
+    lcd_set_cursor(1, 5); // Vị trí bắt đầu hiển thị giá trị X, Y, Z
+    sprintf(buffer, "%.1f %.1f %.1f", gyro_x, gyro_y, gyro_z);
+    lcd_send_string(buffer);
 }
