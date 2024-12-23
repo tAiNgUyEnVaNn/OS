@@ -10,6 +10,31 @@ float gyro_sensitivity;
 // TAG used for MPU6050 sensor logi
 static const char TAG[] = "mpu6050";
 
+static esp_err_t MPU6050_DetectAddress(void)
+{
+    uint8_t data = 0;
+    esp_err_t ret;
+
+    // Kiểm tra địa chỉ 0x68
+    ret = i2c_master_write_read_device(I2C_NUM_0, MPU6050_DEFAULT_ADDRESS, NULL, 0, &data, 1, 1000 / portTICK_PERIOD_MS);
+    if (ret == ESP_OK)
+    {
+        MPU_ADD = MPU6050_DEFAULT_ADDRESS;
+        ESP_LOGI(TAG, "mpu add at 68");
+        return ESP_OK;
+    }
+
+    // Kiểm tra địa chỉ 0x69
+    ret = i2c_master_write_read_device(I2C_NUM_0, MPU6050_ADDRESS, NULL, 0, &data, 1, 1000 / portTICK_PERIOD_MS);
+    if (ret == ESP_OK)
+    {
+        MPU_ADD = MPU6050_ADDRESS;
+        return ESP_OK;
+    }
+    MPU_ADD = 0;
+    return ESP_FAIL;
+}
+
 /**
  * @brief Initialize the MPU6050 I2C connection
  * @param accel_range accelerometer range scale
@@ -20,12 +45,13 @@ static const char TAG[] = "mpu6050";
 esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
 {
     ESP_LOGI(TAG, "Beginning connection");
-
+    // MPU6050_DetectAddress();
+    // mpuReadByte(MPU6050_WHO_AM_I);
     if (install_driver)
     {
         ESP_LOGI(TAG, "Installing I2C driver");
 
-        i2c_config_t i2c_config = {
+        i2c_config_t mpu_i2c_config = {
             .mode = I2C_MODE_MASTER,
             .sda_io_num = GPIO_NUM_21,
             .sda_pullup_en = GPIO_PULLUP_ENABLE,
@@ -34,7 +60,7 @@ esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
             .master.clk_speed = MPU6050_I2C_FREQ_HZ,
         };
 
-        i2c_param_config(I2C_NUM_0, &i2c_config);
+        i2c_param_config(I2C_NUM_0, &mpu_i2c_config);
 
         esp_err_t ret = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
 

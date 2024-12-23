@@ -19,7 +19,7 @@
 
 // Device address
 #define MPU6050_ADDRESS 0x69
-
+static uint8_t MPU_ADD = 0;
 // Device default address
 #define MPU6050_DEFAULT_ADDRESS 0x68
 
@@ -103,5 +103,7 @@ float mpuGetAccelerationZ();
 float mpuGetGyroscopeX();
 float mpuGetGyroscopeY();
 float mpuGetGyroscopeZ();
+
+// static esp_err_t MPU6050_DetectAddress();
 
 #endif
