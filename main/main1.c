@@ -15,6 +15,21 @@ mpuValue rV;
 SemaphoreHandle_t xMutex = NULL;
 TickType_t timeOut = 1000;
 
+void i2c_start()
+{
+    i2c_config_t i2c_cfg = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    };
+    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &i2c_cfg));
+    esp_err_t check = i2c_driver_install(I2C_MASTER_NUM, i2c_cfg.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+    ESP_ERROR_CHECK(check);
+}
+
 void mpuTask()
 {
     printf("Starting mpu6050");
@@ -61,7 +76,7 @@ void testTask()
         if (xSemaphoreTake(xMutex, timeOut) == pdPASS)
         {
             printf("acc %.1f %.1f %.1f\n", rV.accX, rV.accY, rV.accZ);
-            // printf("gyr %d %d %d\n", rV.gyrX, rV.gyrY, rV.gyrZ);
+            printf("gyr %d %d %d\n", rV.gyrX, rV.gyrY, rV.gyrZ);
             xSemaphoreGive(xMutex);
         }
         else
@@ -74,43 +89,46 @@ void testTask()
 
 void lcdTask()
 {
-    // initial setup for lcd
-    lcd_i2c_begin();
-    lcd_init();
-    lcd_clear();
     char line1[17], line2[17];
-
+    // lcd_clear();
     while (true)
     {
         if (xSemaphoreTake(xMutex, timeOut) == pdPASS)
         {
-            // sprintf(line1, "acc %.1f %.1f %.1f", rV.accX, rV.accY, rV.accZ);
-            sprintf(line2, "gyr %d %d %d", rV.gyrX, rV.gyrY, rV.gyrZ);
-
+            // printf("Send to LCD");
+            lcd_clear();
+            sprintf(line1, "G %.1f %.1f %.1f", rV.accX, rV.accY, rV.accZ);
+            sprintf(line2, "ANG %d %d %d", rV.gyrX, rV.gyrY, rV.gyrZ);
+            printf("%s\n", line2);
+            lcd_set_cursor(0, 0);
+            lcd_send_string(line1);
+            lcd_set_cursor(1, 0);
+            lcd_send_string(line2);
             xSemaphoreGive(xMutex);
         }
         else
         {
             // do nothing
         }
-        lcd_set_cursor(0, 0);
-        lcd_send_string(line1);
-        lcd_set_cursor(1, 0);
-        lcd_send_string(line2);
-        vTaskDelay(1000);
+        vTaskDelay(D_LCD);
     }
 }
 
 void app_main(void)
 {
-    // setup
+    // init i2c
+    i2c_start();
+    // mpu setup
     mpu_setup(MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DPS, true);
     mpuSetFilterBandwidth(MPU6050_BAND_21_HZ);
+    // initial setup for lcd
+    lcd_init();
+    lcd_clear();
     xMutex = xSemaphoreCreateMutex();
     xTaskCreate(mpuTask, "MPU6050", 1024 * 8, NULL, 2, NULL);
     vTaskDelay(1000);
-    // xTaskCreate(lcdTask, "LCD", 1024 * 8, NULL, 1, NULL);
-    xTaskCreate(testTask, "TEST", 1024 * 8, NULL, 1, NULL);
+    xTaskCreate(lcdTask, "LCD", 1024 * 8, NULL, 1, NULL);
+    // xTaskCreate(testTask, "TEST", 1024 * 8, NULL, 1, NULL);
     vTaskDelay(100);
 
     // // Khởi tạo I2C và LCD

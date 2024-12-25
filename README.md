@@ -20,6 +20,7 @@ For example with R/nW: ```[(0x3Fh << 1) | 0xF]/ [0x3Fh << 1]```
 <S> (addr)<A6-A5-A4-A3-A2-A1-A0-R/W> <ACK> (data)[<P7-P6-P5-P4-P3-P2-P1-P0> <ACK>...]<P>
 ```
 ## Connect to LCD 1602
+[LCD1602](https://www.waveshare.com/datasheet/LCD_en_PDF/LCD1602.pdf)
 Data: 0x28 (0010 1000)  
 --->: u:0010; l:1000  
 --->: 0x2C 0x28 0x8C 0x88

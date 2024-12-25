@@ -42,40 +42,37 @@ static const char TAG[] = "mpu6050";
  * @param install_driver if need install the I2C driver
  * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
+// esp_err_t mpu_setup(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
+// {
+//     ESP_LOGI(TAG, "Beginning connection");
+//     // MPU6050_DetectAddress();
+//     // mpuReadByte(MPU6050_WHO_AM_I);
+//     if (install_driver)
+//     {
+//         ESP_LOGI(TAG, "Installing I2C driver");
+//         i2c_config_t mpu_i2c_config = {
+//             .mode = I2C_MODE_MASTER,
+//             .sda_io_num = GPIO_NUM_21,
+//             .sda_pullup_en = GPIO_PULLUP_ENABLE,
+//             .scl_io_num = GPIO_NUM_22,
+//             .scl_pullup_en = GPIO_PULLUP_ENABLE,
+//             .master.clk_speed = MPU6050_I2C_FREQ_HZ,
+//         };
+//         i2c_param_config(I2C_NUM_0, &mpu_i2c_config);
+//         esp_err_t ret = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+//         if (ret != ESP_OK)
+//         {
+//             ESP_LOGE(TAG, "I2C driver install failed");
+//             return ret;
+//         }
+//         ESP_LOGI(TAG, "I2C driver install success");
+//     }
+//     else
+//     {
+//         ESP_LOGI(TAG, "I2C driver not installed");
+//     }
 esp_err_t mpu_setup(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
 {
-    ESP_LOGI(TAG, "Beginning connection");
-    // MPU6050_DetectAddress();
-    // mpuReadByte(MPU6050_WHO_AM_I);
-    if (install_driver)
-    {
-        ESP_LOGI(TAG, "Installing I2C driver");
-
-        i2c_config_t mpu_i2c_config = {
-            .mode = I2C_MODE_MASTER,
-            .sda_io_num = GPIO_NUM_21,
-            .sda_pullup_en = GPIO_PULLUP_ENABLE,
-            .scl_io_num = GPIO_NUM_22,
-            .scl_pullup_en = GPIO_PULLUP_ENABLE,
-            .master.clk_speed = MPU6050_I2C_FREQ_HZ,
-        };
-
-        i2c_param_config(I2C_NUM_0, &mpu_i2c_config);
-
-        esp_err_t ret = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
-
-        if (ret != ESP_OK)
-        {
-            ESP_LOGE(TAG, "I2C driver install failed");
-            return ret;
-        }
-        ESP_LOGI(TAG, "I2C driver install success");
-    }
-    else
-    {
-        ESP_LOGI(TAG, "I2C driver not installed");
-    }
-
     if (MPU6050_ADDRESS == MPU6050_DEFAULT_ADDRESS)
     {
         if (mpuReadByte(MPU6050_WHO_AM_I) != MPU6050_ADDRESS)
@@ -335,14 +332,18 @@ void updateMpuVal(mpuValue *rV, float delayTime)
     float accX = rawAccelX();
     float accY = rawAccelY();
     float accZ = rawAccelZ();
-    rV->accX = atan2(accY, sqrt(pow(accX, 2) + pow(accZ, 2))) * 180 / M_PI; // roll
-    rV->accY = atan2(accX, sqrt(pow(accY, 2) + pow(accZ, 2))) * 180 / M_PI; // pitch
-    rV->accZ = atan2(sqrt(pow(accX, 2) + pow(accY, 2)), accZ) * 180 / M_PI; // yaw
-    printf("%f", rV->accX);
+    // printf("%.1f", accX);
+    rV->gyrX = (int)roundf(atan2(accY, sqrt(pow(accX, 2) + pow(accZ, 2))) * 180 / M_PI); // roll
+    rV->gyrY = (int)roundf(atan2(accX, sqrt(pow(accY, 2) + pow(accZ, 2))) * 180 / M_PI); // pitch
+    rV->gyrZ = (int)roundf(atan2(sqrt(pow(accX, 2) + pow(accY, 2)), accZ) * 180 / M_PI); // yaw
+    rV->accX = (float)(accX / accel_sensitivity);
+    rV->accY = (float)(accY / accel_sensitivity);
+    rV->accZ = (float)(accZ / accel_sensitivity);
+    // printf("%f", rV->accX);
 
-    rV->gyrX += (int)(gyrX * delayTime / 1000);
-    rV->gyrY += (int)(gyrY * delayTime / 1000);
-    rV->gyrZ += (int)(gyrZ * delayTime / 1000);
+    // rV->gyrX += (int)(gyrX * delayTime / 1000);
+    // rV->gyrY += (int)(gyrY * delayTime / 1000);
+    // rV->gyrZ += (int)(gyrZ * delayTime / 1000);
 }
 
 /**
@@ -351,7 +352,7 @@ void updateMpuVal(mpuValue *rV, float delayTime)
  */
 esp_err_t mpuReadSensors()
 {
-    ESP_LOGI(TAG, "Reading sensors registers");
+    // ESP_LOGI(TAG, "Reading sensors registers");
 
     esp_err_t ret;
 
