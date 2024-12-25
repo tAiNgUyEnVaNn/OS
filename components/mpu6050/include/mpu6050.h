@@ -1,25 +1,14 @@
-/**
- * @file mpu6050.h
- * @author Ailton Fidelix (ailton1626@gmail.com)
- * @brief MPU6050 library for ESP-IDF
- * @version 1.0.0
- * @date 07-08-2022
- * @copyright Copyright (c) 2022
- */
-
-#ifndef MPU6050_H
-#define MPU6050_H
-
 #include "esp_log.h"
 #include "esp_err.h"
 #include "driver/i2c.h"
+#include <math.h>
 
 // I2C master clock
 #define MPU6050_I2C_FREQ_HZ 400000
 
 // Device address
 #define MPU6050_ADDRESS 0x69
-static uint8_t MPU_ADD = 0;
+// static uint8_t MPU_ADD = 0;
 // Device default address
 #define MPU6050_DEFAULT_ADDRESS 0x68
 
@@ -83,7 +72,7 @@ static uint8_t MPU_ADD = 0;
 #define NACK_VAL 0x1               // I2C nack value
 
 // Functions used to initialize the communication, write and read
-esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range, bool install_driver);
+esp_err_t mpu_setup(uint8_t accel_range, uint8_t gyro_range, bool install_driver);
 esp_err_t mpuReadSensors();
 uint8_t mpuReadByte(uint8_t reg);
 esp_err_t mpuWriteByte(uint8_t reg, uint8_t value);
@@ -97,13 +86,19 @@ esp_err_t mpuSetGyroRange(uint8_t gyro_range);
 
 // Functions used to get the sensors values
 float mpuGetTemperature();
-float mpuGetAccelerationX();
-float mpuGetAccelerationY();
-float mpuGetAccelerationZ();
-float mpuGetGyroscopeX();
-float mpuGetGyroscopeY();
-float mpuGetGyroscopeZ();
+float rawAccelX();
+float rawAccelY();
+float rawAccelZ();
+float rawGyrX();
+float rawGyrY();
+float rawGyrZ();
+
+typedef struct
+{
+    int gyrX, gyrY, gyrZ;
+    float accX, accY, accZ;
+} mpuValue;
+
+void updateMpuVal(mpuValue *rV, float delayTime);
 
 // static esp_err_t MPU6050_DetectAddress();
-
-#endif

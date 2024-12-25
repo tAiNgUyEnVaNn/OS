@@ -1,62 +1,142 @@
 #include <stdio.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <sdkconfig.h>
 #include "driver/i2c.h"
 #include "lcd.h"
 #include "mpu6050.h"
 
-#define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO cho xung clock I2C SCL */
-#define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO cho dữ liệu I2C SDA  */
-#define I2C_MASTER_NUM 0              /*!< Cổng I2C chính của I2C */
-#define I2C_MASTER_FREQ_HZ 100000     /*!< Tần số xung nhịp của I2C */
-#define I2C_MASTER_TX_BUF_DISABLE 0
-#define I2C_MASTER_RX_BUF_DISABLE 0
+// Delay time per task
+#define D_MPU 10
+#define D_LCD 100
 
-// Sau sẽ thay các giá trị đọc được từ cảm biến
-float accel_x = 1.23, accel_y = 4.56, accel_z = 7.89;
-float gyro_x = 0.12, gyro_y = 3.45, gyro_z = 6.78;
+mpuValue rV;
 
-/**
- * @brief Hàm khởi tạo I2C
- */
-static esp_err_t i2c_master_init(void)
+SemaphoreHandle_t xMutex = NULL;
+TickType_t timeOut = 1000;
+
+void mpuTask()
 {
-    i2c_config_t lcd_i2c_conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = I2C_MASTER_SDA_IO,
-        .scl_io_num = I2C_MASTER_SCL_IO,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ,
-    };
-    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &lcd_i2c_conf));
-    return i2c_driver_install(I2C_MASTER_NUM, lcd_i2c_conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+    printf("Starting mpu6050");
+
+    while (true)
+    {
+        if (xSemaphoreTake(xMutex, timeOut) == pdPASS)
+        {
+            esp_err_t ret = mpuReadSensors();
+            if (ret == ESP_OK)
+            {
+                // rV.accX = rawAccelX();
+                // rV.accY = rawAccelY();
+                // rV.accZ = rawAccelZ();
+                // rV.gyrX = rawGyrX();
+                // rV.gyrY = rawGyrY();
+                // rV.gyrZ = rawGyrZ();
+                // float delay = D_MPU*CONFIG_FREERTOS_HZ
+                updateMpuVal(&rV, pdTICKS_TO_MS(D_MPU));
+                // printf("From MPU6050: %d\n", rV.gyrX);
+            }
+            else
+            {
+                printf("Read sensor fail: %s\n", esp_err_to_name(ret));
+            }
+
+            xSemaphoreGive(xMutex);
+        }
+        else
+        {
+            // do nothing
+        }
+        vTaskDelay(D_MPU);
+    }
+}
+
+void testTask()
+{
+    // print for testing mpu6050
+    printf("Ready for test");
+
+    while (true)
+    {
+        if (xSemaphoreTake(xMutex, timeOut) == pdPASS)
+        {
+            printf("acc %.1f %.1f %.1f\n", rV.accX, rV.accY, rV.accZ);
+            // printf("gyr %d %d %d\n", rV.gyrX, rV.gyrY, rV.gyrZ);
+            xSemaphoreGive(xMutex);
+        }
+        else
+        {
+            // do nothing
+        }
+        vTaskDelay(D_LCD);
+    }
+}
+
+void lcdTask()
+{
+    // initial setup for lcd
+    lcd_i2c_begin();
+    lcd_init();
+    lcd_clear();
+    char line1[17], line2[17];
+
+    while (true)
+    {
+        if (xSemaphoreTake(xMutex, timeOut) == pdPASS)
+        {
+            // sprintf(line1, "acc %.1f %.1f %.1f", rV.accX, rV.accY, rV.accZ);
+            sprintf(line2, "gyr %d %d %d", rV.gyrX, rV.gyrY, rV.gyrZ);
+
+            xSemaphoreGive(xMutex);
+        }
+        else
+        {
+            // do nothing
+        }
+        lcd_set_cursor(0, 0);
+        lcd_send_string(line1);
+        lcd_set_cursor(1, 0);
+        lcd_send_string(line2);
+        vTaskDelay(1000);
+    }
 }
 
 void app_main(void)
 {
-    // Khởi tạo I2C và LCD
-    ESP_ERROR_CHECK(i2c_master_init());
-    lcd_init();
+    // setup
+    mpu_setup(MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DPS, true);
+    mpuSetFilterBandwidth(MPU6050_BAND_21_HZ);
+    xMutex = xSemaphoreCreateMutex();
+    xTaskCreate(mpuTask, "MPU6050", 1024 * 8, NULL, 2, NULL);
+    vTaskDelay(1000);
+    // xTaskCreate(lcdTask, "LCD", 1024 * 8, NULL, 1, NULL);
+    xTaskCreate(testTask, "TEST", 1024 * 8, NULL, 1, NULL);
+    vTaskDelay(100);
 
-    // Xóa màn hình
-    lcd_clear();
+    // // Khởi tạo I2C và LCD
+    // lcd_i2c_begin();
+    // lcd_init();
 
-    // Dòng 1: Hiển thị ACC và các giá trị X, Y, Z
-    lcd_set_cursor(0, 0); // Đặt con trỏ ở dòng 1, cột 0
-    lcd_send_string("ACC   X  Y  Z");
+    // // Xóa màn hình
+    // lcd_clear();
 
-    lcd_set_cursor(1, 0); // Dòng 2: Hiển thị GYR và các giá trị X, Y, Z
-    lcd_send_string("GYR   X  Y  Z");
+    // // Dòng 1: Hiển thị ACC và các giá trị X, Y, Z
+    // lcd_set_cursor(0, 0); // Đặt con trỏ ở dòng 1, cột 0
+    // lcd_send_string("ACC   X  Y  Z");
 
-    // Cập nhật giá trị từ cảm biến
-    char buffer[16];
+    // lcd_set_cursor(1, 0); // Dòng 2: Hiển thị GYR và các giá trị X, Y, Z
+    // lcd_send_string("GYR   X  Y  Z");
 
-    // Dòng 1: Giá trị ACC
-    lcd_set_cursor(0, 5); // Vị trí bắt đầu hiển thị giá trị X, Y, Z
-    sprintf(buffer, "%.1f %.1f %.1f", accel_x, accel_y, accel_z);
-    lcd_send_string(buffer);
+    // // Cập nhật giá trị từ cảm biến
+    // char buffer[16];
 
-    // Dòng 2: Giá trị GYR
-    lcd_set_cursor(1, 5); // Vị trí bắt đầu hiển thị giá trị X, Y, Z
-    sprintf(buffer, "%.1f %.1f %.1f", gyro_x, gyro_y, gyro_z);
-    lcd_send_string(buffer);
+    // // Dòng 1: Giá trị ACC
+    // lcd_set_cursor(0, 5); // Vị trí bắt đầu hiển thị giá trị X, Y, Z
+    // sprintf(buffer, "%.1f %.1f %.1f", accel_x, accel_y, accel_z);
+    // lcd_send_string(buffer);
+
+    // // Dòng 2: Giá trị GYR
+    // lcd_set_cursor(1, 5); // Vị trí bắt đầu hiển thị giá trị X, Y, Z
+    // sprintf(buffer, "%.1f %.1f %.1f", gyro_x, gyro_y, gyro_z);
+    // lcd_send_string(buffer);
 }

@@ -12,6 +12,21 @@ static const char *TAG = "lcd";
 // rs = 0/1 ---> Instruction register select/ Data register select
 // en = 0/1 ---> Save data to DDRAM (Display Data RAM)<Not permission to read/write>/ Enable to read/write
 
+void lcd_i2c_begin()
+{
+    i2c_config_t lcd_i2c_conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    };
+    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &lcd_i2c_conf));
+    esp_err_t check = i2c_driver_install(I2C_MASTER_NUM, lcd_i2c_conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+    ESP_ERROR_CHECK(check);
+}
+
 void lcd_send_cmd(char cmd)
 {
     esp_err_t ret;

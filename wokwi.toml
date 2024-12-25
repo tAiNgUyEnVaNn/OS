@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = '.\build\OS.bin'
+elf = '.\build\OS.elf'

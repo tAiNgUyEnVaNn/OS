@@ -6,7 +6,7 @@
 # PCF8574x
 ## Datasheet reference from 
 - NXP Semiconductors: [PCF8574 Datasheet](https://www.nxp.com/docs/en/data-sheet/PCF8574_PCF8574A.pdf)
-- Texas Instruments: [PCF857A](https://www.ti.com/lit/ds/symlink/pcf8574a.pdf)
+- Texas Instruments: [PCF8574A](https://www.ti.com/lit/ds/symlink/pcf8574a.pdf)
 ## Register map
 3 modify pin: A0, A1, A2. Value from (000 -> 111)
 ### With PCF8674

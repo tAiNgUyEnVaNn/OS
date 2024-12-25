@@ -10,30 +10,30 @@ float gyro_sensitivity;
 // TAG used for MPU6050 sensor logi
 static const char TAG[] = "mpu6050";
 
-static esp_err_t MPU6050_DetectAddress(void)
-{
-    uint8_t data = 0;
-    esp_err_t ret;
+// static esp_err_t MPU6050_DetectAddress(void)
+// {
+//     uint8_t data = 0;
+//     esp_err_t ret;
 
-    // Kiểm tra địa chỉ 0x68
-    ret = i2c_master_write_read_device(I2C_NUM_0, MPU6050_DEFAULT_ADDRESS, NULL, 0, &data, 1, 1000 / portTICK_PERIOD_MS);
-    if (ret == ESP_OK)
-    {
-        MPU_ADD = MPU6050_DEFAULT_ADDRESS;
-        ESP_LOGI(TAG, "mpu add at 68");
-        return ESP_OK;
-    }
+//     // Kiểm tra địa chỉ 0x68
+//     ret = i2c_master_write_read_device(I2C_NUM_0, MPU6050_DEFAULT_ADDRESS, NULL, 0, &data, 1, 1000 / portTICK_PERIOD_MS);
+//     if (ret == ESP_OK)
+//     {
+//         MPU_ADD = MPU6050_DEFAULT_ADDRESS;
+//         ESP_LOGI(TAG, "mpu add at 68");
+//         return ESP_OK;
+//     }
 
-    // Kiểm tra địa chỉ 0x69
-    ret = i2c_master_write_read_device(I2C_NUM_0, MPU6050_ADDRESS, NULL, 0, &data, 1, 1000 / portTICK_PERIOD_MS);
-    if (ret == ESP_OK)
-    {
-        MPU_ADD = MPU6050_ADDRESS;
-        return ESP_OK;
-    }
-    MPU_ADD = 0;
-    return ESP_FAIL;
-}
+//     // Kiểm tra địa chỉ 0x69
+//     ret = i2c_master_write_read_device(I2C_NUM_0, MPU6050_ADDRESS, NULL, 0, &data, 1, 1000 / portTICK_PERIOD_MS);
+//     if (ret == ESP_OK)
+//     {
+//         MPU_ADD = MPU6050_ADDRESS;
+//         return ESP_OK;
+//     }
+//     MPU_ADD = 0;
+//     return ESP_FAIL;
+// }
 
 /**
  * @brief Initialize the MPU6050 I2C connection
@@ -42,7 +42,7 @@ static esp_err_t MPU6050_DetectAddress(void)
  * @param install_driver if need install the I2C driver
  * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
-esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
+esp_err_t mpu_setup(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
 {
     ESP_LOGI(TAG, "Beginning connection");
     // MPU6050_DetectAddress();
@@ -270,37 +270,38 @@ float mpuGetTemperature()
  * @brief Get the X acceleration
  * @return float X acceleration value in the range configured
  */
-float mpuGetAccelerationX()
+float rawAccelX()
 {
     int16_t result = (((int16_t)buffer[0]) << 8) | buffer[1];
-    return result / accel_sensitivity;
+    // printf("%d", result);
+    return result; // / accel_sensitivity;
 }
 
 /**
  * @brief Get the Y acceleration
  * @return float Y acceleration value in the range configured
  */
-float mpuGetAccelerationY()
+float rawAccelY()
 {
     int16_t result = (((int16_t)buffer[2]) << 8) | buffer[3];
-    return result / accel_sensitivity;
+    return result; // / accel_sensitivity;
 }
 
 /**
  * @brief Get the Z acceleration
  * @return float Z acceleration value in the range configured
  */
-float mpuGetAccelerationZ()
+float rawAccelZ()
 {
     int16_t result = (((int16_t)buffer[4]) << 8) | buffer[5];
-    return result / accel_sensitivity;
+    return result; // / accel_sensitivity;
 }
 
 /**
  * @brief Get the X gyroscope
  * @return float X gyroscope value in the range configured
  */
-float mpuGetGyroscopeX()
+float rawGyrX()
 {
     int16_t result = (((int16_t)buffer[8]) << 8) | buffer[9];
     return result / gyro_sensitivity;
@@ -310,7 +311,7 @@ float mpuGetGyroscopeX()
  * @brief Get the Y gyroscope
  * @return float Y gyroscope value in the range configured
  */
-float mpuGetGyroscopeY()
+float rawGyrY()
 {
     int16_t result = (((int16_t)buffer[10]) << 8) | buffer[11];
     return result / gyro_sensitivity;
@@ -320,10 +321,28 @@ float mpuGetGyroscopeY()
  * @brief Get the Z gyroscope
  * @return float Z gyroscope value in the range configured
  */
-float mpuGetGyroscopeZ()
+float rawGyrZ()
 {
     int16_t result = (((int16_t)buffer[12]) << 8) | buffer[13];
     return result / gyro_sensitivity;
+}
+
+void updateMpuVal(mpuValue *rV, float delayTime)
+{
+    float gyrX = rawGyrX();
+    float gyrY = rawGyrY();
+    float gyrZ = rawGyrZ();
+    float accX = rawAccelX();
+    float accY = rawAccelY();
+    float accZ = rawAccelZ();
+    rV->accX = atan2(accY, sqrt(pow(accX, 2) + pow(accZ, 2))) * 180 / M_PI; // roll
+    rV->accY = atan2(accX, sqrt(pow(accY, 2) + pow(accZ, 2))) * 180 / M_PI; // pitch
+    rV->accZ = atan2(sqrt(pow(accX, 2) + pow(accY, 2)), accZ) * 180 / M_PI; // yaw
+    printf("%f", rV->accX);
+
+    rV->gyrX += (int)(gyrX * delayTime / 1000);
+    rV->gyrY += (int)(gyrY * delayTime / 1000);
+    rV->gyrZ += (int)(gyrZ * delayTime / 1000);
 }
 
 /**
