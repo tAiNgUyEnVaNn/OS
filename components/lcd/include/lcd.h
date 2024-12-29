@@ -2,6 +2,14 @@
 #include "driver/i2c.h"
 #include "unistd.h"
 
+// ESP I2C master setup
+#define I2C_MASTER_SCL_IO GPIO_NUM_22 /*!< GPIO cho xung clock I2C SCL */
+#define I2C_MASTER_SDA_IO GPIO_NUM_21 /*!< GPIO cho dữ liệu I2C SDA  */
+#define I2C_MASTER_NUM 0              /*!< Cổng I2C chính của I2C */
+#define I2C_MASTER_FREQ_HZ 100000     /*!< Tần số xung nhịp của I2C */
+#define I2C_MASTER_TX_BUF_DISABLE 0
+#define I2C_MASTER_RX_BUF_DISABLE 0
+
 // Delay time require, reference on page 13 of LCD datasheet <for 4-bit interferce>
 #define DELAY_POWER_ON 50000  // wait time for stabilizing power supply >40ms
 #define DELAY_SET_INIT_1 5000 // >4.1ms
@@ -18,6 +26,7 @@
 #define CLR_DISPLAY 0x01
 
 // esp_err_t master_init();
+void lcd_i2c_begin();
 
 void lcd_init(void); // initialize lcd
 
