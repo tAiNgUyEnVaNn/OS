@@ -49,6 +49,8 @@ void mpuTask()
                 // rV.gyrZ = rawGyrZ();
                 // float delay = D_MPU*CONFIG_FREERTOS_HZ
                 updateMpuVal(&rV, pdTICKS_TO_MS(D_MPU));
+                printf("gyr %d %d %d\n", rV.gyrX, rV.gyrY, rV.gyrZ);
+
                 // printf("From MPU6050: %d\n", rV.gyrX);
             }
             else
